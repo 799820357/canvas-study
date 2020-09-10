@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="Keywords" content="猩"/>
+<meta name="Description" content="猩，猩猩，猩猩猩"/>
+<title>粒子成像demo</title>
+<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	#container{
+		width: 500px;
+		height: 500px;
+		border: 10px solid #000000;
+		margin: 20px auto 0;
+		box-shadow: 0 0 30px rgba(236, 65, 13, 0.8);
+		display: inline-block;
+	}
+</style>
+</head>
+<body>
+<div id="container"></div>
+<script type="text/javascript" src="./js/plotter.js"></script>
+<script type="text/javascript">
+	let stage = new Stage(),
+		ticker = new Ticker();
+	//启动
+	ticker.start();
+	//创建
+	stage.create({
+		width : 500,
+		height : 500,
+		container : document.getElementById('container')
+	});
+	//绘制
+	let draw = stage.draw.bind(stage);
+	//添加ticker
+	ticker.addTicker(draw);
+	let ballA = {
+		x : 100,
+		y : 150,
+		r : 20,
+		angle : 0,//起始角度
+		tr : 100,//旋转半径,
+		focalLength : 200,//焦距
+		speed : 1,
+		move : function(){
+			let _this = this;
+			_this.angle += _this.speed;
+			_this.angle = _this.angle > 360 ? _this.angle - 360 : _this.angle;
+			//转换弧度
+			let radian = _this.angle * Math.PI / 180;
+			let x = Math.cos(radian) * _this.tr,
+				z = Math.sin(radian) * _this.tr;
+			_this.dis_x = _this.tr - x;
+			//缩放比例
+			_this.scale = _this.focalLength / (_this.focalLength - z);
+			_this.zIndex = _this.scale > 1 ? 20 : 0;
+		},
+		render : function(){
+			let _this = this;
+			_this.move();
+			let r = _this.scale * _this.r / 2;
+			let x = _this.dis_x + _this.x;
+			//绘制
+			_this.ctx.beginPath();
+			_this.ctx.arc(x,_this.y,r,0,2*Math.PI);
+			_this.ctx.closePath();
+			_this.ctx.fillStyle = 'red';
+			_this.ctx.globalAlpha = r / _this.r;
+			_this.ctx.fill();
+		}
+	};
+	let ballB = {
+		x : 150,
+		y : 100,
+		r : 20,
+		angle : 0,//起始角度
+		tr : 100,//旋转半径,
+		focalLength : 200,//焦距
+		speed : 1.5,
+		move : function(){
+			let _this = this;
+			_this.angle += _this.speed;
+			_this.angle = _this.angle > 360 ? _this.angle - 360 : _this.angle;
+			let radian = _this.angle * Math.PI / 180;
+			let y = Math.cos(radian) * _this.tr,
+				z = Math.sin(radian) * _this.tr;
+			_this.dis_y = _this.tr - y;
+			//缩放比例
+			_this.scale = _this.focalLength / (_this.focalLength - z);
+			_this.zIndex = _this.scale > 1 ? 20 : 0;
+
+		},
+		render : function(){
+			let _this = this;
+			_this.move();
+			let r = _this.scale * _this.r / 2;
+			let y = _this.y + _this.dis_y;
+			//绘制
+			_this.ctx.beginPath();
+			_this.ctx.arc(_this.x,y,r,0,2*Math.PI);
+			_this.ctx.closePath();
+			_this.ctx.fillStyle = 'blue';
+			_this.ctx.globalAlpha = r / _this.r;
+			_this.ctx.fill();
+		}
+	}
+	let ballC = {
+		x : 50,
+		y : 50,
+		r : 20,
+		angle : 0,//起始角度
+		tr : 100,//旋转半径,
+		focalLength : 150,//焦距
+		speed : 2,
+		offsetAngle : 45,
+		move : function(){
+			let _this = this;
+			_this.angle += _this.speed;
+			_this.angle = _this.angle > 360 ? _this.angle - 360 : _this.angle;
+			let radian = _this.angle * Math.PI / 180;
+			let y = Math.cos(radian) * _this.tr,
+				z = Math.sin(radian) * _this.tr;
+			_this.dis_y = _this.tr - y;
+			//偏移
+			if(_this.offsetAngle){
+				let offRadian = _this.offsetAngle * Math.PI / 180;
+				_this.dis_x = Math.tan(offRadian) * _this.dis_y;
+			}
+			
+			//缩放比例
+			_this.scale = _this.focalLength / (_this.focalLength - z);
+			_this.zIndex = _this.scale > 1 ? 20 : 0;
+
+		},
+		render : function(){
+			let _this = this;
+			_this.move();
+			let r = _this.scale * _this.r / 2;
+			let y = _this.y + (!_this.dis_y ? 0 : _this.dis_y);
+			let x = _this.x + (!_this.dis_x ? 0 : _this.dis_x);
+			//绘制
+			_this.ctx.beginPath();
+			_this.ctx.arc(x,y,r,0,2*Math.PI);
+			_this.ctx.closePath();
+			_this.ctx.fillStyle = 'green';
+			_this.ctx.globalAlpha = r / _this.r;
+			_this.ctx.fill();
+		}
+	}
+	let ballD = {
+		x : 250,
+		y : 50,
+		r : 20,
+		angle : 0,//起始角度
+		tr : 100,//旋转半径,
+		focalLength : 150,//焦距
+		speed : 2.5,
+		offsetAngle : 135,
+		move : function(){
+			let _this = this;
+			_this.angle += _this.speed;
+			_this.angle = _this.angle > 360 ? _this.angle - 360 : _this.angle;
+			let radian = _this.angle * Math.PI / 180;
+			let y = Math.cos(radian) * _this.tr,
+				z = Math.sin(radian) * _this.tr;
+			_this.dis_y = _this.tr - y;
+			//偏移
+			if(_this.offsetAngle){
+				let offRadian = _this.offsetAngle * Math.PI / 180;
+				_this.dis_x = Math.tan(offRadian) * _this.dis_y;
+			}
+			
+			//缩放比例
+			_this.scale = _this.focalLength / (_this.focalLength - z);
+			_this.zIndex = _this.scale > 1 ? 20 : 0;
+
+		},
+		render : function(){
+			let _this = this;
+			_this.move();
+			let r = _this.scale * _this.r / 2;
+			let y = _this.y + (!_this.dis_y ? 0 : _this.dis_y);
+			let x = _this.x + (!_this.dis_x ? 0 : _this.dis_x);
+			//绘制
+			_this.ctx.beginPath();
+			_this.ctx.arc(x,y,r,0,2*Math.PI);
+			_this.ctx.closePath();
+			_this.ctx.fillStyle = 'orange';
+			_this.ctx.globalAlpha = r / _this.r;
+			_this.ctx.fill();
+		}
+	}
+	let wall = {
+		x : 150,
+		y : 150,
+		w : 40,
+		h : 40,
+        angle : 0,
+        scale : 1,
+		fx : 0,
+		zIndex : 10,
+		render : function(){
+			let _this = this;
+            //绘制
+            _this.angle += 0.5;
+            _this.angle = _this.angle > 360 ? _this.angle - 360 : _this.angle;
+            var deg = Math.PI/180;
+            //_this.ctx.transform(Math.cos(_this.angle*deg),Math.sin(_this.angle*deg),-Math.sin(_this.angle*deg),Math.cos(_this.angle*deg),0,0);
+            if(!_this.fx){
+                _this.scale -= .05;
+            }else{
+                _this.scale += .05;
+            }
+            if(_this.scale >= 1){
+                _this.fx = 0;
+            }
+            if(_this.scale <= -1){
+                _this.fx = 1;
+			}
+			_this.ctx.translate(_this.x + _this.w / 2, _this.y + _this.h / 2)
+            _this.ctx.transform(_this.scale,0,0,1,0,0);
+            _this.ctx.fillStyle="blue";
+            _this.ctx.fillRect(-_this.w / 2,-_this.h / 2, _this.w,_this.h)
+		}
+    };
+	//插入
+	stage.addChild(wall);
+	stage.addChild(ballA);
+	stage.addChild(ballB);
+	stage.addChild(ballC);
+	stage.addChild(ballD);
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="Keywords" content="猩"/>
+<meta name="Description" content="猩，猩猩，猩猩猩"/>
+<title>粒子成像demo</title>
+<style type="text/css">
+    *{
+		margin: 0;
+		padding: 0;
+	}
+	#container{
+		width: 500px;
+		height: 500px;
+		border: 10px solid #000000;
+		margin: 20px auto 0;
+		box-shadow: 0 0 30px rgba(236, 65, 13, 0.8);
+		display: inline-block;
+	}
+</style>
+</head>
+<body>
+    <div id="container"></div>
+    <script type="text/javascript" src="./js/magpie.js"></script>
+    <script type="text/javascript" src="./js/plotter.js"></script>
+    <script type="text/javascript">
+        let resources = [
+            {
+                name : 'y1',
+                src : './images/y1.png'
+            },
+            {
+                name : 'y2',
+                src : './images/y2.png'
+            },
+            {
+                name : 'y3',
+                src : './images/y3.png'
+            },
+            {
+                name : 'y4',
+                src : './images/y4.png'
+            },
+            {
+                name : 'y7',
+                src : './images/y7.png'
+            },
+            {
+                name : 'y8',
+                src : './images/y8.png'
+            }
+        ];
+        let stage = new Stage(),
+            ticker = new Ticker();
+        //启动
+        ticker.start();
+        //创建
+        stage.create({
+            width : 500,
+            height : 500,
+            container : document.getElementById('container')
+        });
+        //绘制
+        let draw = stage.draw.bind(stage);
+        //添加ticker
+        ticker.addTicker(draw);
+        //根据图片获取粒子
+        function getParticles(img){
+            //创建舞台
+            let canvas = document.createElement('canvas'),
+                ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img,0,0,canvas.width,canvas.height);
+            //获取图片数据
+            let imgData = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+            let particles = [];
+            for(let r = 0; r < canvas.width; r++){
+                for(let c = 0; c < canvas.height; c ++){
+                    let pos = (c * canvas.width + r) * 4;
+                    //alpha大于250
+                    if(imgData[pos + 3] > 250){
+                        particles.push({
+                            orgX : r,
+                            orgY : c,
+                            fillStyle : 'rgba(' + imgData[pos] + ',' + imgData[pos + 1] + ','+ imgData[pos + 2] +',' + imgData[pos + 3]+ ')'
+                        });
+                    }
+                }
+            };
+            canvas = ctx = null;
+            return particles;
+        };
+        //加载烟花图片
+        Magpie.loadResources(resources,function(result){
+            //创建图片粒子
+            let particles = [];
+            result.forEach((v) => {
+                let particleObj = {
+                    particles : getParticles(v.content),
+                    die : true,
+                    centerPointer : {
+                        x : v.content.width / 2,
+                        y : v.content.height / 2
+                    },
+                    //初始化
+                    init : function(){
+                        let _this = this;
+                        _this.die = false;
+                        _this.x = 150 + Math.random() * 200;
+                        _this.y = 490,
+                        _this.vy = 1;
+                        _this.vx = Math.random() - 0.5;
+                        _this.particles.forEach((v) => {
+                            //设置渲染坐标
+                            v.x = (Math.random() - 0.5) * 20;
+                            v.y = (Math.random() - 0.5) * 20;
+                            let r = Math.sqrt(Math.pow(v.x,2) + Math.pow(v.y,2));
+                            if(r > 10){
+                                let angle = Math.atan2(v.y,v.x);
+                                v.x = 10 * Math.cos(angle);
+                                v.y = 10 * Math.sin(angle);
+                            }
+                            //设置加速度
+                            v.vx = 0.01;
+                            v.vy = 0.01;
+                        });
+                    },
+                    //上升
+                    up : function(){
+                        let _this = this;
+                        _this.x += _this.vx;
+                        _this.y -= _this.vy;
+                        _this.vx += Math.random() - 0.5;
+                        _this.vy += Math.random() * 2 + 1;
+                        _this.particles.forEach((v) => {
+                            let x = _this.x + v.x,
+                                y = _this.y + v.y;
+                            _this.ctx.fillStyle = v.fillStyle;
+                            _this.ctx.fillRect(x,y,1,1);
+                        });
+
+                    },
+                    //爆炸
+                    blast : function(){
+                        let _this = this;
+                        let die = 0;
+                        _this.particles.forEach((v) => {
+                            let offx = v.orgX - _this.centerPointer.x - v.x,
+                                offy = v.orgY - _this.centerPointer.y - v.y;
+                            if(Math.abs(offx) < 1 && Math.abs(offy) < 1){
+                                die ++;
+                            }
+                            let offz = Math.sqrt(Math.pow(offx,2) + Math.pow(offy,2)),
+                                angle = Math.atan2(offy,offx);
+                            let disx = offz * Math.cos(angle) * v.vx,
+                                disy = offz * Math.sin(angle) * v.vy;
+                            v.x += disx;
+                            v.y += disy; 
+                            let speed = Math.random() * 0.05;
+                            v.vx += speed;
+                            v.vy += speed;
+                            //绘制
+                            let x = _this.x + v.x,
+                                y = _this.y + v.y;
+                            _this.ctx.fillStyle = v.fillStyle;
+                            _this.ctx.fillRect(x,y,1,1); 
+                        });
+                        if(die >= _this.particles.length){
+                            _this.die = true;
+                        }
+                    },
+                    render : function(){
+                        let _this = this;
+                        if(_this.die){ 
+                            _this.init();
+                            return 
+                        }
+                        if(_this.y < _this.canvas.height / 3){
+                            _this.blast();
+                        }else{
+                            _this.up();
+                        }
+                    }
+                };
+                particleObj.init();
+                //插入
+                stage.addChild(particleObj);
+            });
+        });
+    </script>
+</body>
+</html>

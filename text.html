@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="Keywords" content="猩"/>
+<meta name="Description" content="猩，猩猩，猩猩猩"/>
+<title>粒子成像demo</title>
+<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	#container{
+		width: 500px;
+		height: 500px;
+		border: 10px solid #000000;
+		margin: 20px auto 0;
+		box-shadow: 0 0 30px rgba(236, 65, 13, 0.8);
+		display: inline-block;
+	}
+</style>
+</head>
+<body>
+<div id="container"></div>
+<script type="text/javascript" src="./js/plotter.js"></script>
+<script type="text/javascript">
+	let stage = new Stage(),
+		ticker = new Ticker();
+	//启动
+	ticker.start();
+	//创建
+	stage.create({
+		width : 500,
+		height : 500,
+		container : document.getElementById('container')
+	});
+	//绘制
+	let draw = stage.draw.bind(stage);
+	//添加ticker
+	ticker.addTicker(draw);
+	//输入文字
+	let txt = {
+		x : 100,
+		y : 100,
+		render : function(){
+			let _this = this;
+			_this.ctx.font = "bold 60px sans-serif";
+			_this.ctx.textBaseline = "middle";
+			_this.ctx.fillText('测试测试', _this.x, _this.y);
+			_this.remove();
+			setTimeout(function(){
+				getParticle(stage);
+			},500);
+		}
+	}
+	//获取例子
+	function getParticle(stage){
+		let {canvas,ctx} = stage;
+		let {width,height} = canvas;
+		let imgData = ctx.getImageData(0,0,width,height).data;
+		for(let x = 0; x < width; x++){
+			for(let y = 0; y < height; y++){
+				let i = (y * width + x) * 4;
+				if(imgData[i + 3] > 128){
+					stage.addChild(new Particle(x,y,getParticle.getColor(imgData,i+3)));
+				}
+			}
+		}
+	};
+	getParticle.getColor = function(data,index){
+        let color = [];
+        for(let i = 0; i < 4; i++){
+            if(i == 0){
+                color.unshift(data[index - i] / 256);
+            }else{
+                color.unshift(data[index - i]);
+            }
+            
+        }
+        return color;
+    }
+	class Particle{
+		constructor (x,y,color){
+			let _this = this;
+			_this.endX = x;
+			_this.endY = y;
+			_this.color = color;
+			_this.state = 0;
+			_this.pow = Math.random();
+			_this.vx = Math.random() * 10 - 5;
+			_this.vy = Math.random() * 10 - 5;
+		}
+		blast (){
+			let _this = this;
+			if(typeof _this.ex != 'number'){
+				_this.x = _this.endX;
+				_this.y = _this.endY;
+				_this.ex = Math.random() * _this.canvas.width;
+				_this.ey = Math.random() * 10;
+			}
+			_this.x += (_this.ex - _this.x) * Math.random() * 0.2;
+			_this.y += (_this.ey - _this.y) * Math.random() * 0.2;
+			if(Math.abs(_this.x - _this.ex) < 1 && Math.abs(_this.y - _this.ey) < 1){
+				_this.state = 1;
+			}
+		}
+		down (){
+			let _this = this;
+			_this.pow += Math.random();
+			_this.y += _this.pow;
+			if(_this.y >= _this.canvas.height){
+				_this.state = 2;
+			}
+		}
+		up (){
+			let _this = this;
+			let disX = _this.endX - _this.x,
+				disY = _this.endY - _this.y,
+				dis = Math.sqrt(Math.pow(disX,2) + Math.pow(disY,2));
+			let angle = Math.atan2(disY,disX);
+			let offX = dis * 0.01 * Math.cos(angle),
+				offY = dis * 0.01 * Math.sin(angle);
+			_this.vx += offX;
+			_this.vy += offY;
+			_this.vx *= 0.9;
+			_this.vy *= 0.8;
+			_this.x += _this.vx;
+			_this.y += _this.vy;
+		}
+		move (){
+			let _this = this;
+			switch(_this.state){
+				case 0 :
+					_this.blast();
+					break;
+				case 1 :
+					_this.down();
+					break;
+				case 2 :
+					_this.up();
+					break;
+			}
+		}
+		render (){
+			let _this = this;
+			_this.move();
+			//绘制
+			_this.ctx.fillStyle = "rgba(" + _this.color.join(',') + ")";
+			_this.ctx.fillRect(_this.x, _this.y, 1, 1);
+		}
+	}
+	//插入
+	stage.addChild(txt);
+</script>
+</body>
+</html>

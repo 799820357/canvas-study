@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="Keywords" content="猩"/>
+<meta name="Description" content="猩，猩猩，猩猩猩"/>
+<title>粒子成像demo</title>
+<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	#container{
+		width: 500px;
+		height: 500px;
+		border: 10px solid #000000;
+		margin: 20px auto 0;
+		box-shadow: 0 0 30px rgba(236, 65, 13, 0.8);
+		display: inline-block;
+	}
+</style>
+</head>
+<body>
+<div id="container"></div>
+<script type="text/javascript" src="./js/plotter.js"></script>
+<script type="text/javascript">
+	let stage = new Stage(),
+		ticker = new Ticker();
+	//启动
+	ticker.start();
+	//创建
+	stage.create({
+		width : 500,
+		height : 500,
+		container : document.getElementById('container')
+	});
+	//绘制
+	let draw = stage.draw.bind(stage);
+	//添加ticker
+    ticker.addTicker(draw);
+    let img = new Image();
+    img.src = './images/1.png';
+	let img1 = {
+		x : 300,
+        y : 100,
+        scale : 1,
+        fx : 0,
+		render : function(){
+            let _this = this;
+            //绘制
+            _this.ctx.translate(_this.x,_this.y);
+            if(!_this.fx){
+                _this.scale -= .05;
+            }else{
+                _this.scale += .05;
+            }
+            if(_this.scale >= 1){
+                _this.fx = 0;
+            }
+            if(_this.scale <= -1){
+                _this.fx = 1;
+            }
+            _this.ctx.transform(_this.scale,0,0,1,0,0);
+            _this.ctx.drawImage(img,-50,-50,100,100);
+		}
+	};
+	let img2 = {
+		x : 100,
+        y : 100,
+        scale : 1,
+        fx : 0,
+		render : function(){
+            let _this = this;
+            //绘制
+            _this.ctx.translate(_this.x,_this.y);
+            if(!_this.fx){
+                _this.scale -= .05;
+            }else{
+                _this.scale += .05;
+            }
+            if(_this.scale >= 1){
+                _this.fx = 0;
+            }
+            if(_this.scale <= -1){
+                _this.fx = 1;
+            }
+            _this.ctx.transform(1,0,0,_this.scale,0,0);
+            _this.ctx.drawImage(img,-50,-50,100,100);
+		}
+	};
+	let img3 = {
+		x : 100,
+        y : 300,
+		angle : 0,
+		deg : Math.PI / 180,
+		render : function(){
+			let _this = this;
+			_this.angle += 0.1;
+			_this.angle = _this.angle > 360 ? _this.angle - 360 : _this.angle;
+            //绘制
+            _this.ctx.translate(_this.x,_this.y);
+			//公式 cs-sc-0-0
+            _this.ctx.transform(Math.cos(_this.angle),Math.sin(_this.angle),-Math.sin(_this.angle),Math.cos(_this.angle),0,0);
+            _this.ctx.drawImage(img,-50,-50,100,100);
+		}
+	};
+	let img4 = {
+		x : 300,
+        y : 300,
+		angle : 0,
+		deg : Math.PI / 180,
+		scale : 1,
+		fx : 1,
+		render : function(){
+			let _this = this;
+			_this.angle += 1;
+			_this.angle = _this.angle > 360 ? _this.angle - 360 : _this.angle;
+			if(_this.fx){
+				_this.scale -= 0.01;
+			}else{
+				_this.scale += 0.01;
+			}
+			if(_this.scale < -1){
+				_this.fx = 0;
+			}
+			if(_this.scale > 1){
+				_this.fx = 1;
+			}
+            //绘制
+            _this.ctx.translate(_this.x,_this.y);
+			_this.ctx.rotate(_this.angle * Math.PI / 180);
+			// _this.ctx.scale(1,_this.scale);
+            _this.ctx.drawImage(img,-50,-50,100,100);
+		}
+    };
+	let img5 = {
+		x : 300,
+        y : 400,
+		render : function(){
+			let _this = this;
+            _this.ctx.drawImage(img,100,100,50,50,_this.x,_this.y,50,50);
+		}
+    };
+	//插入
+	stage.addChild(img1);
+	stage.addChild(img2);
+	stage.addChild(img3);
+	stage.addChild(img4);
+	stage.addChild(img5);
+</script>
+</body>
+</html>

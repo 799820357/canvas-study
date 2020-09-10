@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="Keywords" content="猩"/>
+<meta name="Description" content="猩，猩猩，猩猩猩"/>
+<title>粒子成像demo</title>
+<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	#container{
+		width: 500px;
+		height: 500px;
+		border: 10px solid #000000;
+		margin: 20px auto 0;
+		box-shadow: 0 0 30px rgba(236, 65, 13, 0.8);
+		display: inline-block;
+	}
+</style>
+</head>
+<body>
+<div id="container"></div>
+<script type="text/javascript" src="./js/plotter.js"></script>
+<script type="text/javascript">
+	let stage = new Stage(),
+		ticker = new Ticker();
+	//启动
+	ticker.start();
+	//创建
+	stage.create({
+		width : 500,
+		height : 500,
+		container : document.getElementById('container')
+	});
+	//绘制
+	let draw = stage.draw.bind(stage);
+	let wall = {
+		x : 0,
+		y : 0,
+		w : stage.canvas.width,
+		h : stage.canvas.height,
+		render : function(){
+			let _this = this;
+			_this.ctx.fillStyle = '#000000';
+			_this.ctx.fillRect(_this.x,_this.y,_this.w,_this.h);
+		}
+	}
+	function createSnow(i){
+		let snow = {
+			zIndex : 10,
+			init : function(){
+				let _this = this;
+				_this.x = Math.random() * stage.canvas.width;
+				_this.r = Math.random() * 2 + 1;
+				_this.y = 0;
+				_this.vy = Math.random() * 2 + 4;
+				_this.vx = Math.random() - 0.5;
+			},
+			move : function(){
+				let _this = this;
+				if(!_this.x){
+					_this.init();
+					return;
+				}
+				_this.y += _this.vy;
+				_this.x += _this.vx;
+				if(_this.y > _this.canvas.height){
+					_this.init();
+				}
+			},
+			render : function(){
+				let _this = this;
+				_this.move();
+				_this.ctx.beginPath();
+				_this.ctx.fillStyle = '#ffffff';
+				_this.ctx.arc(_this.x,_this.y,_this.r,0,2 * Math.PI);
+				_this.ctx.fill();
+				_this.ctx.closePath();
+			}
+		}
+		setTimeout(function(){
+			stage.addChild(snow);
+		},10 * i);
+	};
+	(function(){
+		for(let i = 0; i < 200; i++){
+			createSnow(i);
+		}
+	})();
+	//添加ticker
+	stage.addChild(wall);
+    ticker.addTicker(draw);
+
+</script>
+</body>
+</html>

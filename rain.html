@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="Keywords" content="猩"/>
+<meta name="Description" content="猩，猩猩，猩猩猩"/>
+<title>粒子成像demo</title>
+<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	#container{
+		width: 500px;
+		height: 500px;
+		border: 10px solid #000000;
+		margin: 20px auto 0;
+		box-shadow: 0 0 30px rgba(236, 65, 13, 0.8);
+		display: inline-block;
+	}
+</style>
+</head>
+<body>
+<div id="container"></div>
+<script type="text/javascript" src="./js/plotter.js"></script>
+<script type="text/javascript">
+	let stage = new Stage(),
+		ticker = new Ticker();
+	//启动
+	ticker.start();
+	//创建
+	stage.create({
+		width : 500,
+		height : 500,
+		container : document.getElementById('container')
+	});
+	//绘制
+	let draw = stage.draw.bind(stage);
+	let wall = {
+		x : 0,
+		y : 0,
+		w : stage.canvas.width,
+		h : stage.canvas.height,
+		render : function(){
+			let _this = this;
+			_this.ctx.fillStyle = '#000000';
+			_this.ctx.fillRect(_this.x,_this.y,_this.w,_this.h);
+		}
+    }
+	function createRain(i){
+		let rain = {
+            zIndex : 10,
+            w : 1,
+            h : 6,
+            x : Math.random() * (stage.canvas.width + 100),
+			init : function(){
+				let _this = this;
+                _this.r = Math.random() * 4;
+				_this.y = - Math.atan(10) * _this.x;
+				_this.vy = Math.random() * 8 + 6;
+			},
+			move : function(){
+				let _this = this;
+				if(!_this.vy){
+					_this.init();
+					return;
+				}
+                _this.y += _this.vy;
+				if(_this.y > _this.canvas.height){
+					_this.init();
+				}
+			},
+			render : function(){
+				let _this = this;
+				_this.move();
+				_this.ctx.fillStyle = 'rgba(255,255,255,0.8)';
+				_this.ctx.beginPath();
+				_this.ctx.transform(Math.cos(10 * Math.PI / 180),Math.sin(10 * Math.PI / 180),-Math.sin(10 * Math.PI / 180),Math.cos(10 * Math.PI / 180),0,0,0,0);
+				for(let i = 0; i < 3; i++){
+					if(i == 0){
+						y = _this.y;
+					}else{
+						y = _this.y + i * (_this.h + 2)
+					}
+					_this.ctx.fillRect(_this.x,y,_this.w,_this.h);
+				}
+				_this.ctx.fill();
+				_this.ctx.closePath();
+			}
+		}
+		setTimeout(function(){
+			stage.addChild(rain);
+		},20 * i);
+	};
+	(function(){
+		for(let i = 0; i < 300; i++){
+			createRain(i);
+		}
+	})();
+	//添加ticker
+	stage.addChild(wall);
+    ticker.addTicker(draw);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="Keywords" content="猩"/>
+<meta name="Description" content="猩，猩猩，猩猩猩"/>
+<title>粒子成像demo</title>
+<style type="text/css">
+	*{
+		margin: 0;
+		padding: 0;
+	}
+	#container{
+		width: 500px;
+		height: 500px;
+		border: 10px solid #000000;
+		margin: 20px auto 0;
+		box-shadow: 0 0 30px rgba(236, 65, 13, 0.8);
+		display: inline-block;
+	}
+</style>
+</head>
+<body>
+<div id="container"></div>
+<a href="javascript:;" id="wind">起风</a>
+<script type="text/javascript" src="./js/plotter.js"></script>
+<script type="text/javascript">
+	let stage = new Stage(),
+		ticker = new Ticker();
+	//启动
+	ticker.start();
+	//创建
+	stage.create({
+		width : 500,
+		height : 500,
+		container : document.getElementById('container')
+	});
+	//绘制
+	let draw = stage.draw.bind(stage);
+    ticker.addTicker(draw);
+	let wall = {
+		x : 0,
+		y : 0,
+		w : stage.canvas.width,
+		h : stage.canvas.height,
+		render : function(){
+			let _this = this;
+			_this.ctx.fillStyle = '#ffffff';
+			_this.ctx.fillRect(_this.x,_this.y,_this.w,_this.h);
+		}
+	}
+    let pImg = new Image();
+    pImg.src = './images/2.png';
+	function createLeaf(i,fn){
+		let leaf = {
+			init : function(){
+				let _this = this;
+				_this.x = Math.random() * _this.canvas.width;
+				_this.y = 0;
+				_this.wh = Math.random() * 0.8;
+				_this.wh = _this.wh < 0.2 ? 0.2 : _this.wh;
+				_this.deg = Math.PI / 180
+				_this.angle = Math.random() * 360;
+				_this.scale = 1;
+				_this.initX();
+				_this.vy = Math.random() * 4 + 1;
+				_this.va = Math.random() * 4 + 2;
+				_this.vs = Math.random() / 100 + 0.1;
+				_this.fs = 1;
+				_this.fwh = 1;
+			},
+			move : function(){
+				let _this = this;
+				if(typeof _this.x == 'undefined' || _this.y > _this.canvas.height){
+					_this.init();
+					return;
+				};
+				//x
+				_this.handleX();
+				//y
+				_this.handleY();
+				//角度
+				_this.handleAngle();
+				//缩放
+				_this.handleScale();
+				//宽高
+				_this.handleWH();
+			},
+			//宽高,
+			handleWH : function(){
+				let _this = this;
+				//缩放
+				if(_this.fwh){
+					_this.wh -= 0.01;
+				}else{
+					_this.wh += 0.01;
+				}
+				if(_this.wh > 0.8){
+					_this.wh = 0.8;
+					_this.fwh = 1
+				}
+				if(_this.wh < 0.2){
+					_this.wh = 0.2;
+					_this.fwh = 0
+				}
+			
+			},
+			handleX : function(){
+				let _this = this;
+				if(_this.offx < 0){
+					_this.x -= _this.vx;
+				}else if(_this.offx > 0){
+					_this.x += _this.vx;
+				}
+				_this.countx += _this.vx;
+
+				if(_this.countx > Math.abs(_this.offx)){
+					_this.offx = - _this.offx * 2;
+					_this.countx = 0;
+				}
+			},
+			handleY : function(){
+				let _this = this;
+				_this.y += _this.vy;
+			},
+			handleAngle : function(){
+				let _this = this;
+				_this.angle += _this.va;
+				_this.angle = _this.angle > 360 ? _this.angle - 360 : _this.angle;
+			},
+			handleScale : function(){
+				let _this = this;
+				//缩放
+				if(_this.fs){
+					_this.scale -= _this.vs;
+				}else{
+					_this.scale += _this.vs;
+				}
+				if(_this.scale > 1){
+					_this.scale = 1;
+					_this.fs = 1
+				}
+				if(_this.scale < -1){
+					_this.scale = -1;
+					_this.fs = 0
+				}
+			},
+			initX : function(){
+				let _this = this;
+				_this.offx = Math.random() * 40 + 40;
+				_this.countx = 0;
+				_this.vx = 4;
+			},
+			wind : function(params){
+				let _this = this;
+				if(_this.windState){
+					return;
+				}
+				_this.windState = true;
+				let time = 0,
+					inval = 10;
+				let interval = setInterval(function(){
+					if(time > params.time){
+						_this.initX();
+						_this.windState = false;
+						clearInterval(interval);
+						return;
+					}
+					
+					if(time < inval){
+						_this.vx = _this.va = _this.vs = 0;
+					}
+					_this.x += params.vx;
+					_this.angle += params.va;
+					time += inval;
+				},inval);
+			},
+			render : function(){
+				let _this = this;
+				_this.move();
+				//绘制
+				_this.ctx.translate(_this.x,_this.y);
+				_this.ctx.rotate(_this.angle * _this.deg);
+				_this.ctx.scale(1,_this.scale);
+				let w = 100 * _this.wh,
+					h = 130 * _this.wh;
+				_this.ctx.globalAlpha = _this.wh;
+				_this.ctx.drawImage(pImg,-w/2,-h/2,w,h);
+			}
+		};
+		setTimeout(function(){
+			stage.addChild(leaf);
+			if(typeof fn == 'function'){
+				fn();
+			}
+		},30 * i);
+	}
+	
+	//添加ticker
+	stage.addChild(wall);
+    (function(fn){
+		let len = 50;
+		for(let i = 0; i < len; i ++){
+			if(i == len - 1){
+				createLeaf(i,fn);
+			}else{
+				createLeaf(i);
+			}
+		}
+	})(function(){
+		//点击
+		wind.addEventListener('click',function(){
+			stage.children.forEach(ele => {
+				if(typeof ele.wind != 'function'){
+					return;
+				};
+				ele.wind({
+					x : 0,
+					vx : 4,
+					vs : Math.random() / 100 + 0.2,
+					va : Math.random() * 4 + 4,
+					time : 5000
+				});
+			});
+		});
+	})
+	
+
+</script>
+</body>
+</html>
